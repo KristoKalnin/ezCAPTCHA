@@ -35,7 +35,7 @@ function ezcaptcha_add_menu()
 	$capability = "manage_options";
 	$menu_slug = "ezCAPTCHA";
 	$function = "ezcaptcha_page";
-	add_submenu_page($parent_slug, $page_title , $menu_title, $capability, $menu_slug, $function);
+	add_submenu_page($parent_slug, $page_title, $menu_title, $capability, $menu_slug, $function);
 }
 add_action("admin_menu", "ezcaptcha_add_menu");
 
@@ -45,24 +45,23 @@ add_action("admin_menu", "ezcaptcha_add_menu");
  */
 
 
- function ezcaptcha_settings_plugin_link( $links, $file ) 
+function ezcaptcha_settings_plugin_link($links, $file)
 {
-    if ( $file == plugin_basename(dirname(__FILE__) . '/ezCAPTCHA.php') ) 
-    {
-        /*
+	if ($file == plugin_basename(dirname(__FILE__) . '/ezCAPTCHA.php')) {
+		/*
          * Insert the link at the beginning
          */
-        $in = '<a href="options-general.php?page=ezCAPTCHA">' . __('Settings','mtt') . '</a>';
-        array_unshift($links, $in);
+		$in = '<a href="options-general.php?page=ezCAPTCHA">' . __('Settings', 'mtt') . '</a>';
+		array_unshift($links, $in);
 
-        /*
+		/*
          * Insert at the end
          */
-        // $links[] = '<a href="options-general.php?page=ezCAPTCHA">'.__('Settings','mtt').'</a>';
-    }
-    return $links;
+		// $links[] = '<a href="options-general.php?page=ezCAPTCHA">'.__('Settings','mtt').'</a>';
+	}
+	return $links;
 }
-add_filter( 'plugin_action_links', 'ezcaptcha_settings_plugin_link', 10, 2 );
+add_filter('plugin_action_links', 'ezcaptcha_settings_plugin_link', 10, 2);
 
 /**
  * Setting Page Options
@@ -109,17 +108,23 @@ function ezcaptcha_settings()
 	add_settings_section($_id, $_title, $_callback, $_page);
 
 	//add_settings_field( string $id, string $title, callable $callback, string $page, string $section = 'default', array $args = array() )
-	$id = "recaptcha-site-key";
-	$title = "This is sample Textbox";
+	$id = "blazefrost-recaptcha-site-key";
+	$title = "Title placeholder";
 	$callback = "ezcaptcha_options";
 	$page = "blazefrost-ezcaptcha";
 	$section = "ezcaptcha_config";
 	add_settings_field($id, $title, $callback, $page, $section);
 
+	$id2 = "blazefrost-recaptcha-secret-key";
+	$callback2 = "ezcaptcha_options2";
+	add_settings_field($id2, $title, $callback2, $page, $section);
+
 	//do_action( 'register_setting', string $option_group, string $option_name, array $args )
 	$option_group = "ezcaptcha_config";
-	$option_name = "recaptcha-site-key";
+	$option_name = "blazefrost-recaptcha-site-key";
+	$option_name2 = "blazefrost-recaptcha-secret-key";
 	register_setting($option_group, $option_name);
+	register_setting($option_group, $option_name2);
 }
 add_action("admin_init", "ezcaptcha_settings");
 
@@ -131,10 +136,20 @@ function ezcaptcha_options()
 {
 ?>
 	<div class="postbox" style="width: 65%; padding: 30px;">
-		<label for="sitekey">Site key:</label>
-		<input type="text" id="sitekey" name="recaptcha-site-key" value="<?php echo stripslashes_deep(esc_attr(get_option('ezcaptcha-site-key'))); ?>" />
+		<label for="blazefrost-recaptcha-site-key">Site key:</label>
+		<input type="text" id="blazefrost-recaptcha-site-key" name="blazefrost-recaptcha-site-key" value="<?php echo stripslashes_deep(esc_attr(get_option('blazefrost-recaptcha-site-key'))); ?>" />
 	</div>
 <?php
+}
+
+function ezcaptcha_options2()
+{
+?>
+	<div class="postbox" style="width: 65%; padding: 30px;">
+		<label for="blazefrost-recaptcha-secret-key">Secret key:</label>
+		<input type="text" id="blazefrost-recaptcha-secret-key" name="blazefrost-recaptcha-secret-key" value="<?php echo stripslashes_deep(esc_attr(get_option('blazefrost-recaptcha-secret-key'))); ?>" />
+	</div>
+	<?php
 }
 
 /**
@@ -143,36 +158,42 @@ function ezcaptcha_options()
  * https://stackoverflow.com/questions/38233751/show-message-after-activating-wordpress-plugin
  */
 
-register_activation_hook( __FILE__, 'admin_notice_activation_hook' );
+register_activation_hook(__FILE__, 'admin_notice_activation_hook');
 
-function admin_notice_activation_hook() {
-    set_transient( 'admin-notice-transient', true, 5 );
-}
-
-add_action( 'admin_notices', 'admin_notice_activation_notice' );
-
-function admin_notice_activation_notice(){
-
-    /* Check transient, if available display notice */
-    if( get_transient( 'admin-notice-transient' ) ){
-        ?>
-        <div class="updated notice is-dismissible">
-            <p><strong>ezCAPTCHA</strong> has been activated! Don't forget to configure it in <strong>Settings → ezCAPTCHA</strong>.</p>
-        </div>
-        <?php
-        /* Delete transient, only display this notice once. */
-        delete_transient( 'admin-notice-transient' );
-    }
-}
-
-/**
- * Append saved textfield value to each post
- *
- */
-/*
-add_filter('the_content', 'ezcaptcha_com_content');
-function ezcaptcha_com_content($content)
+function admin_notice_activation_hook()
 {
-	return $content . stripslashes_deep(esc_attr(get_option('ezcaptcha-site-key')));
+	set_transient('admin-notice-transient', true, 5);
 }
-*?/
+
+add_action('admin_notices', 'admin_notice_activation_notice');
+
+function admin_notice_activation_notice()
+{
+
+	/* Check transient, if available display notice */
+	if (get_transient('admin-notice-transient')) {
+	?>
+		<div class="updated notice is-dismissible">
+			<p><strong>ezCAPTCHA</strong> has been activated! Don't forget to configure it in <strong>Settings → ezCAPTCHA</strong>.</p>
+		</div>
+<?php
+		/* Delete transient, only display this notice once. */
+		delete_transient('admin-notice-transient');
+	}
+}
+
+add_action('wp_footer', 'add_recaptcha');
+function add_recaptcha()
+{
+	$site_key = stripslashes_deep(esc_attr(get_option('blazefrost-recaptcha-site-key')));
+
+	echo "<script src='https://www.google.com/recaptcha/api.js?render=",$site_key,"'></script>";
+	"<script>
+		grecaptcha.ready(function() {
+		grecaptcha.execute('"+ $site_key + "', {action: 'homepage'}).then(function(token) {
+			$('form').prepend('<input type='hidden' name='g-recaptcha-response' value='" + token +"'>');
+		});
+	  });
+	</script>"
+	;
+}
